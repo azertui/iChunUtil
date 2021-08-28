@@ -3,7 +3,6 @@ package me.ichun.mods.ichunutil.common.head;
 import com.google.gson.*;
 import me.ichun.mods.ichunutil.api.common.head.HeadInfo;
 import me.ichun.mods.ichunutil.common.iChunUtil;
-import me.ichun.mods.ichunutil.common.util.IOUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
@@ -15,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class HeadHandler
 {
@@ -102,22 +104,14 @@ public class HeadHandler
                 File extractedMarker = new File(headDir.toFile(), HEAD_INFO_VERSION + ".extracted");
                 if(!extractedMarker.exists()) //presume we haven't extracted anything yet
                 {
-                    InputStream in = iChunUtil.class.getResourceAsStream("/heads.zip");
-                    if(in != null)
-                    {
-                        iChunUtil.LOGGER.info("Extracted {} Head Info files.", IOUtil.extractFiles(headDir, in, true));
-                    }
-                    else
-                    {
-                        iChunUtil.LOGGER.error("Error extracting heads.zip. InputStream was null.");
-                    }
+                    iChunUtil.LOGGER.info("Extracted {} Head Info files.", extractFiles(true));
 
                     FileUtils.writeStringToFile(extractedMarker, "", StandardCharsets.UTF_8);
                 }
 
                 loadHeadInfos();
 
-                //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new SerialiserHelper());
+//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new SerialiserHelper());
             }
             catch(IOException e)
             {
@@ -125,6 +119,51 @@ public class HeadHandler
                 e.printStackTrace();
             }
         }
+    }
+
+    public static int extractFiles(boolean overwrite) throws IOException
+    {
+        int i = 0;
+        InputStream in = iChunUtil.class.getResourceAsStream("/heads.zip");
+        if(in != null)
+        {
+            ZipInputStream zipStream = new ZipInputStream(in);
+            ZipEntry entry = null;
+
+            while((entry = zipStream.getNextEntry()) != null)
+            {
+                File file = new File(headDir.toFile(), entry.getName());
+                if(!overwrite && file.exists() && file.length() > 3L)
+                {
+                    continue;
+                }
+
+                if(entry.isDirectory())
+                {
+                    if(!file.exists())
+                    {
+                        file.mkdirs();
+                    }
+                }
+                else
+                {
+
+                    FileOutputStream out = new FileOutputStream(file);
+
+                    byte[] buffer = new byte[8192];
+                    int len;
+                    while((len = zipStream.read(buffer)) != -1)
+                    {
+                        out.write(buffer, 0, len);
+                    }
+                    out.close();
+
+                    i++;
+                }
+            }
+            zipStream.close();
+        }
+        return i;
     }
 
     public static Path getHeadsDir()
@@ -212,9 +251,9 @@ public class HeadHandler
                     e.printStackTrace();
                 }
                 catch(ClassNotFoundException ignored){}
-                //                {
-                //                    iChunUtil.LOGGER.error("Class not found for HeadInfo file: {}", file);
-                //                }
+//                {
+//                    iChunUtil.LOGGER.error("Class not found for HeadInfo file: {}", file);
+//                }
             }
         }
         return count;
@@ -277,10 +316,10 @@ public class HeadHandler
 
             e.getValue().forClass = e.getKey().getName();
 
-            if(!(e.getKey() == EnderDragonEntity.class))
-            {
-                continue;
-            }
+                        if(!(e.getKey() == EnderDragonEntity.class))
+                        {
+                            continue;
+                        }
 
             File file = new File(HeadHandler.getHeadsDir().toFile(), e.getKey().getSimpleName() + ".json");
             try

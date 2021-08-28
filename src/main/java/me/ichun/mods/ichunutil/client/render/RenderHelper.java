@@ -33,7 +33,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix3f;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -44,9 +43,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.lang.reflect.Method;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 
 public class RenderHelper
 {
@@ -188,51 +186,6 @@ public class RenderHelper
     public static TextureAtlasSprite buildTASFromNativeImage(@Nonnull ResourceLocation rl, @Nonnull NativeImage image)
     {
         return new TextureAtlasSprite(Minecraft.getInstance().getModelManager().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE), new TextureAtlasSprite.Info(rl, image.getWidth(), image.getHeight(), AnimationMetadataSection.EMPTY), Minecraft.getInstance().gameSettings.mipmapLevels, image.getWidth(), image.getHeight(), 0, 0, image);
-    }
-
-    public static void multiplyStackWithStack(@Nonnull MatrixStack stack, @Nonnull MatrixStack otherStack)
-    {
-        MatrixStack.Entry entLast = stack.getLast();
-        MatrixStack.Entry correctorLast = otherStack.getLast();
-
-        entLast.getMatrix().mul(correctorLast.getMatrix());
-        entLast.getNormal().mul(correctorLast.getNormal());
-    }
-
-    public static MatrixStack.Entry createInterimStackEntry(MatrixStack.Entry prevEntry, MatrixStack.Entry nextEntry, float prog)
-    {
-        //create a copy of prevEntry
-        MatrixStack stack = new MatrixStack();
-        MatrixStack.Entry last = stack.getLast();
-
-        //set to the last entry
-        last.getMatrix().mul(prevEntry.getMatrix());
-        last.getNormal().mul(prevEntry.getNormal());
-
-        //get the difference
-        //matrix
-        Matrix4f subtractMatrix = prevEntry.getMatrix().copy();
-        subtractMatrix.mul(-1F);
-        Matrix4f diffMatrix = nextEntry.getMatrix().copy();
-        diffMatrix.add(subtractMatrix);
-        diffMatrix.mul(prog);
-        last.getMatrix().add(diffMatrix);
-
-        //normal... no add function
-        Matrix3f lastNormal = last.getNormal();
-        Matrix3f prevNormal = prevEntry.getNormal().copy();
-        Matrix3f nextNormal = nextEntry.getNormal().copy();
-        lastNormal.m00 = prevNormal.m00 + (nextNormal.m00 - prevNormal.m00) * prog;
-        lastNormal.m01 = prevNormal.m01 + (nextNormal.m01 - prevNormal.m01) * prog;
-        lastNormal.m02 = prevNormal.m02 + (nextNormal.m02 - prevNormal.m02) * prog;
-        lastNormal.m10 = prevNormal.m10 + (nextNormal.m10 - prevNormal.m10) * prog;
-        lastNormal.m11 = prevNormal.m11 + (nextNormal.m11 - prevNormal.m11) * prog;
-        lastNormal.m12 = prevNormal.m12 + (nextNormal.m12 - prevNormal.m12) * prog;
-        lastNormal.m20 = prevNormal.m20 + (nextNormal.m20 - prevNormal.m20) * prog;
-        lastNormal.m21 = prevNormal.m21 + (nextNormal.m21 - prevNormal.m21) * prog;
-        lastNormal.m22 = prevNormal.m22 + (nextNormal.m22 - prevNormal.m22) * prog;
-
-        return last;
     }
 
     public static void drawTexture(MatrixStack stack, ResourceLocation resource, double posX, double posY, double width, double height, double zLevel)

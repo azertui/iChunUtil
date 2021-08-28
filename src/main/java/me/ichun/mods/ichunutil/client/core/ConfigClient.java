@@ -11,7 +11,6 @@ import me.ichun.mods.ichunutil.common.config.annotations.CategoryDivider;
 import me.ichun.mods.ichunutil.common.config.annotations.Prop;
 import me.ichun.mods.ichunutil.common.head.HeadHandler;
 import me.ichun.mods.ichunutil.common.iChunUtil;
-import me.ichun.mods.ichunutil.common.util.IOUtil;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.config.ModConfig;
 
@@ -177,19 +176,10 @@ public class ConfigClient extends ConfigBase
                 {
                     if(HeadHandler.hasInit())
                     {
-                        InputStream in = iChunUtil.class.getResourceAsStream("/heads.zip");
-                        if(in != null)
-                        {
-                            int extCount = IOUtil.extractFiles(HeadHandler.getHeadsDir(), in, true);
+                        int extCount = HeadHandler.extractFiles(true);
 
-                            HeadHandler.loadHeadInfos();
-                            WindowPopup.popup(item.getWorkspace(), 0.6D, 0.6D, null, I18n.format("config.ichunutil.headTracking.reload.reextract.count", extCount));
-                        }
-                        else
-                        {
-                            iChunUtil.LOGGER.error("Error extracting heads.zip.");
-                            WindowPopup.popup(item.getWorkspace(), 0.6D, 0.6D, null, "Error!", "Error extracting heads.zip.");
-                        }
+                        HeadHandler.loadHeadInfos();
+                        WindowPopup.popup(item.getWorkspace(), 0.6D, 0.6D, null, I18n.format("config.ichunutil.headTracking.reload.reextract.count", extCount));
                     }
                     else
                     {
