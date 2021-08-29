@@ -607,4 +607,10 @@ public class EntityHelper
             this.pos = pos;
         }
     }
+    
+    public static float interpolateValues(float prevVal, float nextVal, float partialTick)
+    {
+        return prevVal + partialTick * (nextVal - prevVal);
+    }
+    
 }
